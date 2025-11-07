@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import Header from './components/Ui/Header';
 import Login from './pages/Login';
 import Register from './pages/Register'; // Register page for new users
-import StudentDashboard from './Pages/StudentDashboard'; // corrected casing to match filesystem
+import StudentDashboard from './pages/StudentDashboard'; // corrected casing to match filesystem
 import AdminDashboard from './pages/AdminDashboard';
 import Fitness from './pages/Fitness';
 import MentalHealth from './pages/MentalHealth';
