@@ -1,67 +1,37 @@
-## Project snapshot
+## Project Snapshot
+- React 19 + Vite + MUI 7/Emotion; entry `src/main.jsx` wires Redux Toolkit store, custom theme, `components/ErrorBoundary.jsx`, and renders `App.jsx`.
+- Routing lives in `src/App.jsx` (`react-router-dom@7`) with a `PrivateRoute` helper that checks `state.user` for `isAuthenticated` + `role`.
+- Redux store currently mounts `user` and `news` reducers; other files under `src/Redux/` are legacy until they are added to `configureStore`.
 
-- This is a React 19 + Vite app (ESM). Entry points: `src/main.jsx` and `src/App.jsx`.
-- UI uses Material-UI (MUI) with Emotion. State uses Redux Toolkit (`src/Redux/userSlice.js`).
-- Routing is in `src/App.jsx` (react-router v7 style). Authentication is mocked in `src/hooks/useAuth.js` and persisted to localStorage under the key `wellnessUser`.
+## Build & Dev Workflow
+- Install deps via `npm install`.
+- Dev server: `npm run dev` (Vite proxies `/api` to `http://localhost:5000` per `vite.config.js`).
+- Production: `npm run build` then `npm run preview` to verify output.
+- Lint everything with `npm run lint`; there are no automated tests yet.
 
-## Quick dev commands (from `package.json`)
-- Install: `npm install`
-- Dev server (HMR): `npm run dev` (runs `vite`).
-- Build: `npm run build` (runs `vite build`).
-- Lint: `npm run lint` (runs `eslint .`).
+## Architecture & Data Flow
+- `src/hooks/useAuth.js` tries `api.post('/api/login')` first, then falls back to mock `student/student` or `admin/admin` credentials and dispatches `setCredentials` before navigating based on role.
+- `src/Redux/userSlice.js` normalizes display names and persists `{ user, role, token }` to `localStorage` key `wellnessUser`; keep that shape so `useAuth` and the axios interceptor keep working.
+- `src/lib/api.js` is the axios singleton; always use it for `/api/*` calls so the Authorization header (sourced from `wellnessUser`) and Vite proxy remain consistent.
+- `App.jsx` holds all public + protected routes; wrap new protected screens with `<PrivateRoute allowedRoles={[...]}>` to reuse the gating logic.
+- `components/Ui/Header.jsx` controls the global chrome. Its view pills update `?view=` and dispatch `newshub:set-view`, which `src/pages/StudentDashboard.jsx` listens for—update both sides together.
+- `StudentDashboard` renders a news feed sourced from `state.news.articles` (with fallbacks) and a metrics dashboard that keeps sleep/water values in component state.
+- `src/Redux/newsSlice.js` is the canonical news slice (localStorage key `whub:news-articles`) and powers both the student feed and admin CRUD. The similarly named `newSlice.js` is a leftover and currently unused.
+- `src/pages/AdminDashboard.jsx` dispatches `newsSlice` actions and calls `/api/issues`; it caches issue data via `src/lib/issuesStore.js` (`wellnessLocalIssues`) so reports submitted from `Community.jsx` remain visible offline.
+- `src/lib/wellnessStorage.js` persists BMI + journaling data under `wellness:lastBmi` / `wellness:lastJournalEntry` per user (id/email/username). Reuse these helpers when adding new wellness widgets.
+- `components/ErrorBoundary.jsx` wraps everything in `main.jsx` so unexpected runtime errors surface without blanking the whole SPA.
 
-## High-level architecture & important patterns
+## Conventions & Gotchas
+- `src/pages/` hosts screens, `src/components/` holds reusable widgets, and `src/components/Ui/` contains layout chrome; stick to `.jsx` files and MUI `sx` styling.
+- When introducing Redux state, export the reducer from `src/Redux/<feature>Slice.js` and register it inside `configureStore` in `main.jsx` before calling `useSelector`.
+- `HydrationTracker.jsx` is the maintained component; `HydrationTraker.jsx` is an outdated duplicate missing imports.
+- `Register.jsx` is the routed registration view; `Registration.jsx` is a mock and should stay untouched unless you explicitly wire it into `App.jsx`.
+- Keep `wellnessUser`, `whub:news-articles`, `wellnessLocalIssues`, `wellness:lastBmi`, and `wellness:lastJournalEntry` keys stable, otherwise `useAuth`, `newsSlice`, and the wellness tools will silently break.
+- Prefer `api` over ad-hoc `fetch` so Authorization headers/tokens stay centralized (admin token copy, issue submission, etc.).
 
-- Routing & authorization: `src/App.jsx` defines routes and a small `PrivateRoute` wrapper that checks `state.user` (Redux) for `isAuthenticated` and `role`. Protected routes use `allowedRoles` arrays: e.g. `<PrivateRoute allowedRoles={["student"]}>`.
-- Mock auth flow: `src/hooks/useAuth.js` implements `login` and `logout` for local development. Valid mock credentials: `student/student` (navigates to `/dashboard`) and `admin/admin` (navigates to `/admin`). The hook dispatches `setCredentials` which writes to localStorage.
-- State persistence: `src/Redux/userSlice.js` reads/writes a single localStorage entry `wellnessUser` on set/logout. Keep that key and the payload shape `{ user, role }` consistent when modifying auth logic.
-- Store setup: configured in `src/main.jsx` using `configureStore` from Redux Toolkit. To add a reducer, add it to the `reducer` object there (example comment present in the file).
-- Theme: A single MUI theme is defined in `src/main.jsx`. Edit colors / component overrides there to affect the whole app.
+## Practical Snippets
+- Protect a route: `<Route path="/fitness" element={<PrivateRoute allowedRoles={['student']}><Fitness /></PrivateRoute>} />`
+- Add a reducer: `const store = configureStore({ reducer: { user: userReducer, news: newsReducer, reminders: remindersReducer } });`
+- Auth-aware API call: `const res = await api.get('/api/issues'); // token auto-attached`
 
-## Codebase conventions and notes for changes
-
-- File locations: UI components live under `src/components/Ui/` (note lowercase `ui`) and pages under `src/pages/`.
-- Slices follow Redux Toolkit `createSlice` with exported actions; reducers are default exports (see `userSlice.js`).
-- Use of `.jsx` for React files is common (both `.jsx` and `.js` appear). Keep consistent extensions when adding new files.
-- Do not assume a backend exists: network calls are not present; `axios` is in dependencies but unused for auth. If adding real API integration, migrate mock login to an async API call and preserve the `setCredentials` payload shape or update all reads/writes to localStorage accordingly.
-
-## Examples (copy/paste patterns)
-
-- Protect a route (follow `App.jsx`):
-
-  <PrivateRoute allowedRoles={["student", "admin"]}>
-    <Community />
-  </PrivateRoute>
-
-- Add a new reducer to store (`src/main.jsx`):
-
-  const store = configureStore({
-    reducer: { user: userReducer, yourSlice: yourReducer }
-  });
-
-- Check auth in a component (use existing hook):
-
-  import useAuth from './hooks/useAuth';
-  const { isAuthenticated, user, role, login, logout } = useAuth();
-
-## Integration points & dependencies
-
-- MUI + Emotion: see `@mui/material`, `@emotion/react`, `@emotion/styled` in `package.json`.
-- Redux Toolkit + React-Redux: `@reduxjs/toolkit`, `react-redux`. Patterns use `configureStore` and `createSlice`.
-- Router: `react-router-dom` v7 — routing uses `<Routes>` and `element` props.
-
-## What an AI agent should do/avoid
-
-- Do: Prefer small, local edits that follow existing patterns (add new slice via `createSlice`, update `configureStore`, protect routes using `PrivateRoute`). Reference `src/hooks/useAuth.js` for login behavior.
-- Do: Preserve localStorage key `wellnessUser` and payload shape unless performing a coordinated change across auth, localStorage reads, and navigation.
-- Avoid: Introducing new global state without adding it to `configureStore` and the Provider in `src/main.jsx`.
-- Avoid: Changing routing conventions; follow `App.jsx`'s `PrivateRoute` pattern and `allowedRoles` arrays for role checks.
-
-## Where to look for more context
-
-- `src/App.jsx` — routing, PrivateRoute, role-based access.
-- `src/main.jsx` — store, theme, app bootstrap.
-- `src/hooks/useAuth.js` — mocked login/logout, navigation behavior.
-- `src/Redux/userSlice.js` — persisted user state and localStorage shape.
-
-If anything here is unclear or you'd like more detail (for example, preferred test runner, CI steps, or how to wire a backend auth service), tell me which area to expand and I will update this file.
+If any section feels unclear (e.g., wiring a real backend, onboarding new slices, or adding tests) let me know and I’ll expand this file.

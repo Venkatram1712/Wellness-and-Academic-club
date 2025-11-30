@@ -15,7 +15,7 @@ const HydrationTracker = () => {
       <Box display="flex" alignItems="center" mb={2}>
         <WaterDropIcon color="info" sx={{ mr: 1, fontSize: 30 }} />
         <Typography variant="h4">
-          <strong>{glasses}</strong> / {goal} Glasses
+          <strong>{glasses}</strong> / {goal} servings
         </Typography>
       </Box>
 
@@ -32,7 +32,7 @@ const HydrationTracker = () => {
           disabled={glasses >= goal}
           sx={{ mr: 2, bgcolor: '#3498db', '&:hover': { bgcolor: '#2980b9' } }}
         >
-          Add Glass
+          Log Intake
         </Button>
         <Button variant="outlined" onClick={() => setGlasses(0)}>
           Reset

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Card, CardContent, Typography, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Card, CardContent, Typography, List, ListItem, ListItemIcon, ListItemText, Box } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
-const FeatureCard = ({ title, description, features, icon, color = 'primary' }) => {
+const FeatureCard = ({ title, description, features, icon, color = 'primary', extraContent }) => {
   return (
     <Card 
       elevation={3} 
@@ -31,6 +31,11 @@ const FeatureCard = ({ title, description, features, icon, color = 'primary' }) 
             </ListItem>
           ))}
         </List>
+        {extraContent && (
+          <Box mt={2} p={2} borderRadius={1} bgcolor="rgba(0,0,0,0.03)">
+            {extraContent}
+          </Box>
+        )}
       </CardContent>
     </Card>
   );

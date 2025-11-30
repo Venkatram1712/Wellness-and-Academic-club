@@ -69,7 +69,13 @@ const HeroCarousel = ({
       onKeyDown={onKeyDown}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      sx={{ position: 'relative', overflow: 'hidden', borderRadius: 2, height }}
+      sx={{
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 4,
+        height,
+        boxShadow: '0 28px 60px rgba(0,0,0,0.18)',
+      }}
     >
       {/* Slides */}
       <Box sx={{ position: 'relative', height: '100%' }}>

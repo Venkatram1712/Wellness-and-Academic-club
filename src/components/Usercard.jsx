@@ -8,18 +8,19 @@ const UserCard = ({ user }) => {
     return null; 
   }
   
-  // Safe defaults in case role or name are missing, though they shouldn't be after login.
-  const userName = user.name || user.username || 'Guest';
-  const userRole = user.role || 'user'; // Assign a default if role is missing
+  const firstLast = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+  const fallbackFromEmail = user.email ? user.email.split('@')[0] : '';
+  const userName = (user.displayName || user.name || user.username || firstLast || fallbackFromEmail || 'Guest').trim();
+  const userRole = (user.role || 'user').toLowerCase(); // Assign a default if role is missing
 
   // Mock score logic remains the same
   const score = userRole === 'admin' ? 'N/A' : '85'; 
 
   // Function to capitalize the role safely
   const formattedRole = userRole.charAt(0).toUpperCase() + userRole.slice(1);
-  
-  // Function to capitalize the name safely
-  const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
+
+  // Keep spacing consistent even if user provided extra whitespace
+  const formattedName = userName.replace(/\s+/g, ' ').trim();
 
   return (
     <Card sx={{ maxWidth: 345, bgcolor: '#c0392b', color: 'white', mb: 4 }}>
@@ -42,16 +43,16 @@ const UserCard = ({ user }) => {
 
         <Box display="flex" justifyContent="space-between" mt={2}>
           <Typography variant="body1">
-            **Role:** {formattedRole}
+            Role: {formattedRole}
           </Typography>
           <Typography variant="body1" fontWeight="bold">
-            **Wellness Score:** <span style={{ color: '#FFEB3B' }}>{score} / 100</span>
+            Wellness Score: <span style={{ color: '#FFEB3B' }}>{score} / 100</span>
           </Typography>
         </Box>
 
         <Box mt={1}>
           <Typography variant="body1">
-            **User:** {formattedName}
+            User: {formattedName}
           </Typography>
         </Box>
       </CardContent>

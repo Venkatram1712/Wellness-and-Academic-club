@@ -9,6 +9,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Fitness from './pages/Fitness';
 import MentalHealth from './pages/MentalHealth';
 import Community from './pages/Community';
+import Nutrition from './pages/Nutrition';
 import NotFound from './pages/NotFound';
 
 // Private Route Component (Routing & Role-Based Authorization)
@@ -41,6 +42,7 @@ function App() {
           {/* Protected Student Routes */}
           <Route path="/dashboard" element={<PrivateRoute allowedRoles={['student']}><StudentDashboard /></PrivateRoute>} />
           <Route path="/fitness" element={<PrivateRoute allowedRoles={['student']}><Fitness /></PrivateRoute>} />
+          <Route path="/nutrition" element={<PrivateRoute allowedRoles={['student']}><Nutrition /></PrivateRoute>} />
           <Route path="/mental-health" element={<PrivateRoute allowedRoles={['student']}><MentalHealth /></PrivateRoute>} />
           <Route path="/community" element={<PrivateRoute allowedRoles={['student', 'admin']}><Community /></PrivateRoute>} />
 

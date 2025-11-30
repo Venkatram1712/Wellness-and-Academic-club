@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Paper, Typography, TextField, Button, Box } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { loadJournalEntry, saveJournalEntry } from '../lib/wellnessStorage';
 
 const JournalingTool = () => {
+    const { user } = useSelector((state) => state.user);
+    const userKey = useMemo(() => user?.id || user?.email || user?.username || 'guest', [user?.id, user?.email, user?.username]);
     const [entry, setEntry] = useState('');
     const [isSaved, setIsSaved] = useState(false);
 
-    const handleSave = () => {
-        if (entry.trim()) {
-            // In a real app, this would save to local storage or an API
-            console.log("Journal saved:", entry);
-            setIsSaved(true);
-            setTimeout(() => setIsSaved(false), 3000);
-            // Optionally clear the entry: setEntry('');
+    useEffect(() => {
+        const saved = loadJournalEntry(userKey);
+        if (saved?.text) {
+            setEntry(saved.text);
         }
+    }, [userKey]);
+
+    const handleSave = () => {
+        const trimmed = entry.trim();
+        if (!trimmed) return;
+        saveJournalEntry(trimmed, userKey);
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 3000);
     };
 
     return (

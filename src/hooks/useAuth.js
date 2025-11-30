@@ -27,7 +27,12 @@ const useAuth = () => {
     else if (username === 'student' && password === 'student') mockRole = 'student';
     else return alert("Invalid credentials. Register first or use 'student'/'student' or 'admin'/'admin'.");
 
-    const userData = { user: { id: 1, name: username, email: `${username}@uni.edu` }, role: mockRole };
+    const mockToken = `mock-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`;
+    const userData = {
+      user: { id: 1, name: username, email: `${username}@uni.edu` },
+      role: mockRole,
+      token: mockToken,
+    };
     dispatch(setCredentials(userData));
     if (mockRole === 'admin') navigate('/admin');
     else navigate('/dashboard');
